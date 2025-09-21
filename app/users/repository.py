@@ -22,7 +22,7 @@ class UserRepo:
         with self.db as db:
             for user in db['users'].values():
                 if user['username'] == username:
-                    return user
+                    return SUserOut.model_validate(user)
 
     async def create_user(self, user_data: SUserCreate) -> SUserOut:
         with self.db as db:

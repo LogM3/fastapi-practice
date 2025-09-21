@@ -12,6 +12,9 @@ class UserService:
     async def get_user_by_id(self, user_id: int) -> SUserOut | None:
         return await self.repo.get_by_id(user_id)
 
+    async def get_user_by_username(self, username: str) -> SUserOut | None:
+        return await self.repo.get_by_username(username)
+
     async def get_users(self) -> list[SUserOut]:
         return await self.repo.get_all()
 
@@ -57,10 +60,9 @@ class UserService:
             user_to_update.id,
             user_data
         )
-    
+
     async def delete_user(self, user_id: int) -> SUserOut | None:
         if not await self.repo.get_by_id(user_id):
             return
-        
-        return await self.repo.delete_user(user_id)
 
+        return await self.repo.delete_user(user_id)

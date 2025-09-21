@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SUser(BaseModel):
@@ -17,4 +17,4 @@ class SUserUpdate(SUser):
 
 class SUserCreate(SUser):
     password: str
-    is_staff: bool
+    is_staff: bool | None = Field(default=False)

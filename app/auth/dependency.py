@@ -1,0 +1,31 @@
+from typing import Annotated
+from fastapi import Depends
+
+from app.auth.connector import UserConnector
+from app.auth.repository import AuthRepo
+from app.auth.service import AuthService
+from app.core.database import Database
+from app.core.dependencies import get_database, get_password_service
+from app.core.security import PasswordService
+from app.users.dependencies import get_user_service
+from app.users.service import UserService
+
+
+async def get_connector(
+        user_service: Annotated[UserService, Depends(get_user_service)]
+):
+    return UserConnector(user_service)
+
+
+async def get_auth_repo(
+        db: Annotated[Database, Depends(get_database)]
+) -> AuthRepo:
+    return AuthRepo(db)
+
+
+async def get_auth_service(
+        connector: Annotated[UserConnector, Depends(get_connector)],
+        pwd: Annotated[PasswordService, Depends(get_password_service)],
+        repo: Annotated[AuthRepo, Depends(get_auth_repo)]
+) -> AuthService:
+    return AuthService(connector, pwd, repo)
