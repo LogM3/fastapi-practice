@@ -1,6 +1,6 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Query
-
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.auth.dependency import get_current_user
 from app.core.dependencies import get_password_service
 from app.core.security import PasswordService
 from app.users.dependencies import get_user_service
@@ -37,8 +37,12 @@ async def get_users(
 async def create_user(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],
+    cur_user: Annotated[SUserOut, Depends(get_current_user)],
     user_data: SUserCreate
 ) -> SUserOut:
+    if not cur_user.is_staff:
+        raise HTTPException(401)
+
     user: SUserOut | None = await service.create_user(user_data, pwd)
     if not user:
         raise UsernameExistsError
@@ -49,8 +53,12 @@ async def create_user(
 async def create_users(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],
+    cur_user: Annotated[SUserOut, Depends(get_current_user)],
     users_data: list[SUserCreate]
 ) -> list[SUserOut]:
+    if not cur_user.is_staff:
+        raise HTTPException(401)
+
     return await service.create_user_bulk(users_data, pwd)
 
 
@@ -58,9 +66,13 @@ async def create_users(
 async def update_user(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],
+    cur_user: Annotated[SUserOut, Depends(get_current_user)],
     user_id: int,
     user_data: SUserUpdate
 ) -> SUserOut:
+    if not cur_user.is_staff and cur_user.id != user_id:
+        raise HTTPException(401)
+
     user_to_update: SUserOut | None = await service.get_user_by_id(user_id)
     if not user_to_update:
         raise UserNotFoundError
@@ -78,8 +90,12 @@ async def update_user(
 @router.delete('/{user_id}')
 async def delete_user(
     service: Annotated[UserService, Depends(get_user_service)],
+    cur_user: Annotated[SUserOut, Depends(get_current_user)],
     user_id: int
 ) -> SUserOut:
+    if not cur_user.is_staff and cur_user.id != user_id:
+        raise HTTPException(401)
+
     deleted_user: SUserOut | None = await service.delete_user(user_id)
     if not deleted_user:
         raise UserNotFoundError

@@ -1,3 +1,4 @@
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
 
@@ -14,3 +15,4 @@ class PasswordService:
 
 
 pwd_service: PasswordService = PasswordService()
+oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer('/auth/login')

@@ -48,10 +48,12 @@ class Database(metaclass=SingletonMeta):
         if not self._connections:
             self._accessed = True
         self._connections += 1
+        print(f'Database connected! Current connections: {self._connections}')
         return self.db
 
     def __exit__(self, exc_type, exc, tb) -> None:
         self._connections = max(0, self._connections - 1)
+        print('Database disconnected!')
         if not self._connections:
             self._accessed = False
 

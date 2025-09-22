@@ -13,4 +13,19 @@ class UsernameExistsError(HTTPException):
 
 class WrongCredentialsError(HTTPException):
     def __init__(self) -> None:
-        super().__init__(status_code=400, detail='Wrong Credentials')
+        super().__init__(status_code=401, detail='Wrong Credentials')
+
+
+class TokenExpiredError(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(status_code=401, detail='Token expired')
+
+
+class InvalidTokenError(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(status_code=401, detail='Token invalid')
+
+
+class WrongTokenTypeError(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(status_code=401, detail='Wrong token type')

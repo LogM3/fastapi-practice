@@ -2,10 +2,16 @@ from dataclasses import dataclass
 import time
 from typing import Any
 
-from jose import jwt
+from fastapi import HTTPException
+from jose import jwt, ExpiredSignatureError, JWTError
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.repository import AuthRepo
+from app.core.exceptions import (
+    InvalidTokenError,
+    TokenExpiredError,
+    WrongTokenTypeError
+)
 from app.settings import settings
 from app.auth.connector import UserConnector
 from app.auth.schemas import SAuthRegister, TokenPair
@@ -58,8 +64,8 @@ class AuthService:
             'iat': now,
             'typ': 'refresh'
         }
-
-        return TokenPair(
+        
+        tokens: TokenPair = TokenPair(
             access_token=jwt.encode(
                 access_payload,
                 settings.JWT_SECRET,
@@ -73,6 +79,14 @@ class AuthService:
             expires_in=access_expire
         )
 
+        await self.repo.save_refresh_token(
+            tokens.refresh_token,
+            username,
+            refresh_expire
+        )
+
+        return tokens
+
     async def login(
             self,
             credentials: OAuth2PasswordRequestForm
@@ -80,10 +94,38 @@ class AuthService:
         if not await self._validate_credentials(credentials):
             return
 
-        tokens: TokenPair = await self._create_tokens(credentials.username)
-        await self.repo.save_refresh_token(
-            tokens.refresh_token,
-            credentials.username,
-            tokens.expires_in
-        )
+        return await self._create_tokens(credentials.username)
+
+    async def update_tokens(self, refresh: str) -> TokenPair | None:
+        try:
+            payload: dict[str, Any] = await self.decode_token(
+                refresh,
+                'refresh'
+            )
+        except HTTPException:
+            return
+        if not await self.repo.compare_refresh(
+            refresh,
+            {'sub': payload['sub'], 'exp': payload['exp']}
+        ):
+            return
+
+        await self.repo.delete_refresh(refresh)
+        tokens: TokenPair = await self._create_tokens(payload['sub'])
         return tokens
+
+    @staticmethod
+    async def decode_token(token: str, _type: str) -> dict[str, Any]:
+        try:
+            payload: dict[str, Any] = jwt.decode(
+                token,
+                settings.JWT_SECRET,
+                settings.JWT_ALGORITHM
+            )
+        except ExpiredSignatureError:
+            raise TokenExpiredError
+        except JWTError:
+            raise InvalidTokenError
+        if payload['typ'] != _type:
+            raise WrongTokenTypeError
+        return payload

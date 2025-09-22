@@ -32,3 +32,14 @@ async def login(
     if not tokens:
         raise WrongCredentialsError
     return tokens
+
+
+@router.post('/refresh')
+async def update_tokens(
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    refresh: str
+) -> TokenPair:
+    tokens: TokenPair | None = await service.update_tokens(refresh)
+    if not tokens:
+        raise WrongCredentialsError
+    return tokens
