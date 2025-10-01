@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from typing import Any
-from app.core.database import Database
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @dataclass
 class AuthRepo:
-    db: Database
+    db: AsyncSession
 
     async def save_refresh_token(
             self,

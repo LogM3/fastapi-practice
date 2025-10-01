@@ -8,7 +8,9 @@ class SUser(BaseModel):
 class SUserOut(SUser):
     id: int
     is_staff: bool
-    password: str
+    hashed_password: str
+
+    model_config = {'from_attributes':  True}
 
 
 class SUserUpdate(SUser):
@@ -16,5 +18,5 @@ class SUserUpdate(SUser):
 
 
 class SUserCreate(SUser):
-    password: str
+    hashed_password: str
     is_staff: bool | None = Field(default=False)

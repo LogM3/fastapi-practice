@@ -9,5 +9,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
+    DB_DRIVER: str = 'postgresql+asyncpg'
+    DB_USER: str = 'postgres'
+    DB_PASSWORD: str = 'postgres'
+    DB_HOST: str = '127.0.0.1'
+    DB_PORT: str = '5432'
+    DB_NAME: str = 'postgres'
+
+    @property
+    def db_url(self) -> str:
+        return (
+            f'{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@'
+            f'{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
+        )
+
 
 settings: Settings = Settings()

@@ -1,14 +1,15 @@
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import Database
-from app.core.dependencies import get_database
+from app.core.dependencies import get_db_connection
 from app.users.repository import UserRepo
 from app.users.service import UserService
 
 
-async def get_user_repo(db: Annotated[Database, Depends(get_database)]) -> UserRepo:
+async def get_user_repo(
+        db: Annotated[AsyncSession, Depends(get_db_connection)]) -> UserRepo:
     return UserRepo(db)
 
 

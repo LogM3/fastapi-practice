@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from pydantic import ValidationError
+
 from app.core.security import PasswordService
 from app.users.repository import UserRepo
 from app.users.schemas import SUserCreate, SUserOut, SUserUpdate
@@ -10,16 +12,31 @@ class UserService:
     repo: UserRepo
 
     async def get_user_by_id(self, user_id: int) -> SUserOut | None:
-        return await self.repo.get_by_id(user_id)
+        try:
+            result: SUserOut = SUserOut.model_validate(
+                await self.repo.get_by_id(user_id)
+            )
+        except ValidationError:
+            return None
+        return result
 
     async def get_user_by_username(self, username: str) -> SUserOut | None:
-        return await self.repo.get_by_username(username)
+        try:
+            result: SUserOut = SUserOut.model_validate(
+                await self.repo.get_by_username(username)
+            )
+        except ValidationError:
+            return None
+        return result
 
     async def get_users(self) -> list[SUserOut]:
-        return await self.repo.get_all()
+        return [
+            SUserOut.model_validate(usr)
+            for usr in await self.repo.get_all()
+        ]
 
     async def get_users_by_ids(self, user_ids: list[int]) -> list[SUserOut]:
-        return [user for id in user_ids if (
+        return [SUserOut.model_validate(user) for id in user_ids if (
             user := await self.repo.get_by_id(id))]
 
     async def create_user(
@@ -30,15 +47,19 @@ class UserService:
         if await self.repo.get_by_username(user_data.username):
             return
 
-        user_data.password = await pwd.get_pwd_hash(user_data.password)
-        return await self.repo.create_user(user_data)
+        user_data.hashed_password = await pwd.get_pwd_hash(
+            user_data.hashed_password
+        )
+        return SUserOut.model_validate(
+            await self.repo.create_user(user_data.model_dump())
+        )
 
     async def create_user_bulk(
             self,
             users_data: list[SUserCreate],
             pwd: PasswordService
     ) -> list[SUserOut]:
-        return [user for user_data in users_data if (
+        return [SUserOut.model_validate(user) for user_data in users_data if (
             user := await self.create_user(user_data, pwd))]
 
     async def update_user(
@@ -54,15 +75,20 @@ class UserService:
             return
 
         if user_data.password:
-            user_data.password = await pwd.get_pwd_hash(user_data.password)
+            user_data.password = await pwd.get_pwd_hash(
+                user_data.password
+            )
 
-        return await self.repo.update_user(
+        return SUserOut.model_validate(await self.repo.update_user(
             user_to_update.id,
-            user_data
-        )
+            {
+                'username': user_data.username,
+                'hashed_password': user_data.password
+            }
+        ))
 
     async def delete_user(self, user_id: int) -> SUserOut | None:
         if not await self.repo.get_by_id(user_id):
             return
 
-        return await self.repo.delete_user(user_id)
+        return SUserOut.model_validate(await self.repo.delete_user(user_id))

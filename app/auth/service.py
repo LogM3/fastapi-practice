@@ -39,7 +39,7 @@ class AuthService:
             credentials.username
         )
         if (not user or not await self.pwd_service.verify_pwd_hash(
-            user.password, credentials.password
+            user.hashed_password, credentials.password
         )):
             return False
 
