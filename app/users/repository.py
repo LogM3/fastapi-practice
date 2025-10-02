@@ -1,53 +1,62 @@
 from dataclasses import dataclass
+from typing import Any, Sequence
 
-from app.users.schemas import SUserCreate, SUserOut, SUserUpdate
-from app.core.database import Database
+from sqlalchemy import delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.repo import BaseRepo
+from app.users.models import User
 
 
 @dataclass
-class UserRepo:
-    db: Database
+class UserRepo(BaseRepo[User]):
+    db: AsyncSession
+    model: type[User] = User
 
-    async def get_by_id(self, id: int) -> SUserOut | None:
-        with self.db as db:
-            result = db['users'].get(id)
-        return SUserOut.model_validate(result) if result else None
+    async def get_by_id(self, id: int) -> User | None:
+        return await self.db.get(self.model, id)
 
-    async def get_all(self) -> list[SUserOut]:
-        with self.db as db:
-            result = db['users'].values()
-        return [SUserOut.model_validate(user) for user in result]
+    async def get_all(self) -> Sequence[User]:
+        async with self.db as session:
+            return (await session.execute(select(self.model))).scalars().all()
 
-    async def get_by_username(self, username: str) -> SUserOut | None:
-        with self.db as db:
-            for user in db['users'].values():
-                if user['username'] == username:
-                    return SUserOut.model_validate(user)
+    async def get_by_username(self, username: str) -> User | None:
+        async with self.db as session:
+            return (await session.execute(
+                select(self.model)
+                .where(self.model.username == username)
+            )).scalar_one_or_none()
 
-    async def create_user(self, user_data: SUserCreate) -> SUserOut:
-        with self.db as db:
-            id: int = max(db['users'].keys()) + 1
-            user: dict = user_data.model_dump()
-            user.update({'id': id})
-            db['users'].update({id: user})
-            return SUserOut.model_validate(db['users'][id])
+    async def create_user(self, user_data: dict[Any, Any]) -> User:
+        async with self.db as session:
+            result = User(**user_data)
+            session.add(result)
+            await session.commit()
+            return result
 
     async def update_user(
             self,
             user_id: int,
-            user_data: SUserUpdate
-    ) -> SUserOut:
-        with self.db as db:
-            data: dict = user_data.model_dump()
-            if not data['password']:
-                del data['password']
-            db['users'][user_id].update(data)
-            return SUserOut.model_validate(db['users'][user_id])
+            user_data: dict[Any, Any]
+    ) -> User:
+        if not user_data['hashed_password']:
+            del user_data['hashed_password']
+        async with self.db as session:
+            result = (await session.execute(
+                update(self.model)
+                .where(self.model.id == user_id)
+                .values(**user_data)
+                .returning(User)
+            )).scalar_one()
+            await session.commit()
+            return result
 
-    async def delete_user(self, user_id: int) -> SUserOut:
-        with self.db as db:
-            deleted_user: SUserOut = SUserOut.model_validate(
-                db['users'][user_id]
-            )
-            del db['users'][user_id]
-        return deleted_user
+    async def delete_user(self, user_id: int) -> User:
+        async with self.db as session:
+            result = (await session.execute(
+                delete(self.model)
+                .where(self.model.id == user_id)
+                .returning(User)
+            )).scalar_one()
+            await session.commit()
+            return result
