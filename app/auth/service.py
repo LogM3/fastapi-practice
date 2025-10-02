@@ -27,7 +27,7 @@ class AuthService:
 
     async def register(self, payload: SAuthRegister) -> SUserOut | None:
         user_data: SUserCreate = SUserCreate.model_validate(
-            payload.model_dump()
+            {'username': payload.username, 'hashed_password': payload.password}
         )
         return await self.connector.create_user(user_data, self.pwd_service)
 
@@ -64,7 +64,7 @@ class AuthService:
             'iat': now,
             'typ': 'refresh'
         }
-        
+
         tokens: TokenPair = TokenPair(
             access_token=jwt.encode(
                 access_payload,
