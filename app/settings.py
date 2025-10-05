@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     JWT_SECRET: str = 'jro2i3'
     JWT_ALGORITHM: str = 'HS256'
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
     DB_DRIVER: str = 'postgresql+asyncpg'

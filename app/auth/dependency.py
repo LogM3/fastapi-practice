@@ -37,9 +37,9 @@ async def get_auth_service(
 async def get_current_user(
         connector: Annotated[UserConnector, Depends(get_connector)],
         request: Request,
-        # _: Annotated[str, Depends(oauth2_scheme)]
+        _: Annotated[str, Depends(oauth2_scheme)]
 ) -> SUserOut:
-    return SUserOut(username='maksu', id=0, is_staff=True, hashed_password='')
+    # return SUserOut(username='maksu', id=0, is_staff=True, hashed_password='')
     user_payload: dict[str, Any] | None | HTTPException = getattr(
         request.state,
         'user_payload',
@@ -55,3 +55,12 @@ async def get_current_user(
     if not user:
         raise UserNotFoundError
     return user
+
+
+async def staff_only(
+        current_user: Annotated[SUserOut, Depends(get_current_user)]
+) -> SUserOut:
+    print(current_user)
+    if not current_user.is_staff:
+        raise HTTPException(status_code=401)
+    return current_user

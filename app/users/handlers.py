@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
-from app.auth.dependency import get_current_user
+from app.auth.dependency import get_current_user, staff_only
 from app.core.dependencies import get_password_service
 from app.core.security import PasswordService
 from app.users.dependencies import get_user_service
@@ -53,12 +53,9 @@ async def create_user(
 async def create_users(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],
-    cur_user: Annotated[SUserOut, Depends(get_current_user)],
+    _: Annotated[SUserOut, Depends(staff_only)],
     users_data: list[SUserCreate]
 ) -> list[SUserOut]:
-    if not cur_user.is_staff:
-        raise HTTPException(401)
-
     return await service.create_user_bulk(users_data, pwd)
 
 

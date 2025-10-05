@@ -9,3 +9,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(nullable=False, unique=True)
     is_staff: Mapped[bool] = mapped_column(default=False)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
+    # projects: Mapped[Project | None] = relationship(
+    #     'Project',
+    #     back_populates='person_in_charge'
+    # )

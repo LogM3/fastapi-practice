@@ -46,7 +46,7 @@ class UserRepo(BaseRepo[User]):
                 update(self.model)
                 .where(self.model.id == user_id)
                 .values(**user_data)
-                .returning(User)
+                .returning(self.model)
             )).scalar_one()
             await session.commit()
             return result
