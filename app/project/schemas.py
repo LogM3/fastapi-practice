@@ -27,6 +27,15 @@ class SProjectOut(BaseModel):
     model_config = {'from_attributes':  True}
 
 
+class SProjectOutList(BaseModel):
+    items: list[SProjectOut]
+    page: int
+    per_page: int
+    has_prev: bool
+    has_next: bool
+    total_count: int
+
+
 class SProjectUpdate(BaseModel):
     name: str | None = None
     status: ProjectStatus | None = None

@@ -39,7 +39,6 @@ async def get_current_user(
         request: Request,
         _: Annotated[str, Depends(oauth2_scheme)]
 ) -> SUserOut:
-    # return SUserOut(username='maksu', id=0, is_staff=True, hashed_password='')
     user_payload: dict[str, Any] | None | HTTPException = getattr(
         request.state,
         'user_payload',
