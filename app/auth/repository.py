@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,16 +11,28 @@ from app.auth.models import TokenUser
 class AuthRepo:
     db: AsyncSession
 
+    async def get_all(self) -> Sequence[TokenUser]:
+        async with self.db as session:
+            return (await session.execute(select(TokenUser))).scalars().all()
+
+    async def get_refresh(self, sub: str) -> TokenUser | None:
+        async with self.db as session:
+            return (await session.execute(
+                select(TokenUser).where(TokenUser.username == sub)
+            )).scalar_one_or_none()
+
     async def save_refresh_token(
             self,
             token: str,
             sub: str,
             expires_at: int
-    ) -> None:
+    ) -> TokenUser:
         async with self.db as session:
-            session.add(
-                TokenUser(username=sub, token=token, expire=expires_at))
+            result: TokenUser = TokenUser(
+                username=sub, token=token, expire=expires_at)
+            session.add(result)
             await session.commit()
+            return result
 
     async def compare_refresh(
             self,

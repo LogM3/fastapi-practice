@@ -16,11 +16,18 @@ class Settings(BaseSettings):
     DB_PORT: str = '5432'
     DB_NAME: str = 'postgres'
 
+    TESTING: bool = False
+    TESTING_DB_NAME: str = 'testing'
+
     @property
     def db_url(self) -> str:
-        return (
+        base_url = (
             f'{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@'
-            f'{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
+            f'{self.DB_HOST}:{self.DB_PORT}'
+        )
+        return (
+            f'{base_url}'
+            f'/{self.TESTING_DB_NAME if self.TESTING else self.DB_NAME}'
         )
 
 

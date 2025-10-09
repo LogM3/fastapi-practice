@@ -39,7 +39,7 @@ class SProjectOutList(BaseModel):
 class SProjectUpdate(BaseModel):
     name: str | None = None
     status: ProjectStatus | None = None
-    description: str | None
+    description: str | None = None
     person_in_charge: int | None = None
     start_time: datetime | None = None
     complete_time: datetime | None = None

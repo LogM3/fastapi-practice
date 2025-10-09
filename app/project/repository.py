@@ -26,12 +26,12 @@ class ProjectRepo(BaseRepo[Project]):
 
     async def get_all(
             self,
-            page: int,
-            per_page: int,
-            person_in_charge: int | None,
-            status: str | None,
-            sort_by: str,
-            sort_order: str
+            page: int = 1,
+            per_page: int = 5,
+            person_in_charge: int | None = None,
+            status: str | None = None,
+            sort_by: str = 'id',
+            sort_order: str = 'desc'
     ) -> tuple[Sequence[Project], int]:
         query = select(self.model)
         total_query = select(func.count()).select_from(self.model)
