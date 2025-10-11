@@ -8,7 +8,7 @@ from app.project.models import ProjectStatus
 class SProjectCreate(BaseModel):
     name: str
     status: ProjectStatus | None = ProjectStatus.NEW
-    description: str | None
+    description: str | None = None
     person_in_charge: int | None = None
     start_time: datetime | None = None
     complete_time: datetime | None = None

@@ -28,6 +28,12 @@ class AuthRepo:
             expires_at: int
     ) -> TokenUser:
         async with self.db as session:
+            previous_token: TokenUser | None = (await session.execute(
+                select(TokenUser).where(TokenUser.username == sub)
+            )).scalar_one_or_none()
+            if previous_token:
+                await session.delete(previous_token)
+
             result: TokenUser = TokenUser(
                 username=sub, token=token, expire=expires_at)
             session.add(result)

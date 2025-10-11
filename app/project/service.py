@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -67,9 +68,13 @@ class ProjectService:
         project_data: SProjectUpdate,
         project_id: int
     ) -> SProjectOut | None:
+        data: dict[Any, Any] = {}
+        for k, v in project_data.model_dump().items():
+            if v:
+                data[k] = v
         try:
             return SProjectOut.model_validate(
-                await self.repo.update(project_data.model_dump(), project_id))
+                await self.repo.update(data, project_id))
         except ValidationError:
             return
 

@@ -31,7 +31,7 @@ class Project(Base):
     complete_time: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
-    description: Mapped[str | None]
+    description: Mapped[str | None] = mapped_column(default=None)
     person_in_charge: Mapped[int | None] = mapped_column(
         ForeignKey('users.id', ondelete='SET NULL')
     )
