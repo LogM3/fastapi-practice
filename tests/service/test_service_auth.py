@@ -1,4 +1,4 @@
-from pytest import fixture
+from pytest import fixture, mark
 from asyncio import sleep
 
 from fastapi.security import OAuth2PasswordRequestForm
@@ -15,6 +15,7 @@ async def register_user(auth_service: AuthService):
     await auth_service.register(user_register)
 
 
+@mark.service
 async def test_auth_register(
     auth_service: AuthService,
     user_repo: UserRepo
@@ -24,6 +25,7 @@ async def test_auth_register(
     assert await user_repo.get_by_username(user_register.username)
 
 
+@mark.service
 async def test_auth_login(
     auth_service: AuthService,
     register_user: None
@@ -35,6 +37,7 @@ async def test_auth_login(
     ))).access_token
 
 
+@mark.service
 async def test_auth_update(
     auth_service: AuthService,
     register_user: None

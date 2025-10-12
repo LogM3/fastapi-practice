@@ -1,8 +1,11 @@
+from pytest import mark
+
 from app.project.models import ProjectStatus
 from app.project.schemas import SProjectCreate, SProjectOut, SProjectUpdate
 from app.project.service import ProjectService
 
 
+@mark.service
 async def test_project_get(
     project_service: ProjectService,
     create_projects: list[SProjectOut]
@@ -21,6 +24,7 @@ async def test_project_get(
         )).items) == 1
 
 
+@mark.service
 async def test_project_create(project_service: ProjectService):
     project = await project_service.create_project(
         SProjectCreate(name='pr1')
@@ -35,6 +39,7 @@ async def test_project_create(project_service: ProjectService):
     ])) == 2
 
 
+@mark.service
 async def test_project_update(
     project_service: ProjectService,
     create_projects: list[SProjectOut]
@@ -49,6 +54,7 @@ async def test_project_update(
     ).name == create_projects[0].name
 
 
+@mark.service
 async def test_project_delete(
     project_service: ProjectService,
     create_projects: list[SProjectOut]

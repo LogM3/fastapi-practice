@@ -1,9 +1,12 @@
+from pytest import mark
+
 from app.core.security import PasswordService
 from app.users.models import User
 from app.users.schemas import SUserCreate, SUserOut, SUserUpdate
 from app.users.service import UserService
 
 
+@mark.service
 async def test_user_get(
     user_service: UserService,
     create_user: User
@@ -14,6 +17,7 @@ async def test_user_get(
     assert await user_service.get_users_by_ids([create_user.id])
 
 
+@mark.service
 async def test_user_create(
     user_service: UserService,
     pwd: PasswordService
@@ -26,6 +30,7 @@ async def test_user_create(
     assert not await user_service.create_user(user_data, pwd)
 
 
+@mark.service
 async def test_user_bulk_create(
     user_service: UserService,
     pwd: PasswordService
@@ -41,6 +46,7 @@ async def test_user_bulk_create(
     assert await user_service.get_user_by_username('maksu')
 
 
+@mark.service
 async def test_user_update(
     user_service: UserService,
     pwd: PasswordService,
@@ -56,6 +62,7 @@ async def test_user_update(
     assert await user_service.get_user_by_username(user_data.username)
 
 
+@mark.service
 async def test_user_delete(
     user_service: UserService,
     create_user: User

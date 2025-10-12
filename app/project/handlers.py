@@ -47,7 +47,7 @@ async def get_all_projects(
     )
 
 
-@router.post('/')
+@router.post('/', status_code=201)
 async def create_project(
     service: Annotated[ProjectService, Depends(get_project_service)],
     _: Annotated[SUserOut, Depends(staff_only)],

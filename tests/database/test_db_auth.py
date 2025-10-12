@@ -21,10 +21,12 @@ async def create_token(repo: AuthRepo):
     )
 
 
+@pytest.mark.database
 async def test_token_user_empty(repo: AuthRepo):
     assert await repo.get_all() == []
 
 
+@pytest.mark.database
 async def test_token_user_create(repo: AuthRepo):
     await repo.save_refresh_token(
         token='dsfmkldlkfglek',
@@ -34,6 +36,7 @@ async def test_token_user_create(repo: AuthRepo):
     assert await repo.get_refresh('maksu') and len(await repo.get_all()) == 1
 
 
+@pytest.mark.database
 async def test_token_user_delete(create_token: TokenUser, repo: AuthRepo):
     assert await repo.get_refresh(create_token.username)
     await repo.delete_refresh(create_token.token)

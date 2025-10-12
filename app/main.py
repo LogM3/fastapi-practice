@@ -5,6 +5,7 @@ from app.core.exceptions import TokenExpiredError
 from app.users.handlers import router as user_router
 from app.auth.handlers import router as auth_router
 from app.project.handlers import router as project_router
+from app.request_test.handlers import router as test_router
 from app.auth.service import AuthService
 
 
@@ -12,6 +13,7 @@ app: FastAPI = FastAPI()
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(project_router)
+app.include_router(test_router)
 
 
 @app.middleware('http')

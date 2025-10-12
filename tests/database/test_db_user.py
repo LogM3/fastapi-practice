@@ -6,10 +6,12 @@ from app.users.models import User
 from app.users.repository import UserRepo
 
 
+@pytest.mark.database
 async def test_user_empty(user_repo: UserRepo):
     assert await user_repo.get_all() == []
 
 
+@pytest.mark.database
 async def test_user_create(user_repo: UserRepo):
     user_data = {
         'username': 'maksu',
@@ -21,6 +23,7 @@ async def test_user_create(user_repo: UserRepo):
         await user_repo.create_user(user_data)
 
 
+@pytest.mark.database
 async def test_user_edit(create_user: User, user_repo: UserRepo):
     user_data = {
         'username': 'changed',
@@ -34,6 +37,7 @@ async def test_user_edit(create_user: User, user_repo: UserRepo):
         await user_repo.get_by_username(user_data['username'])).id
 
 
+@pytest.mark.database
 async def test_delete_user(create_user: User, user_repo: UserRepo):
     user: User = await user_repo.delete_user(create_user.id)
     assert not await user_repo.get_by_id(user.id)

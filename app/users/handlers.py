@@ -33,7 +33,7 @@ async def get_users(
     return await service.get_users_by_ids(user_ids)
 
 
-@router.post('/')
+@router.post('/', status_code=201)
 async def create_user(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],
@@ -49,7 +49,7 @@ async def create_user(
     return user
 
 
-@router.post('/bulk')
+@router.post('/bulk', status_code=201)
 async def create_users(
     service: Annotated[UserService, Depends(get_user_service)],
     pwd: Annotated[PasswordService, Depends(get_password_service)],

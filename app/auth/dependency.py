@@ -7,7 +7,7 @@ from app.auth.connector import UserConnector
 from app.auth.repository import AuthRepo
 from app.auth.service import AuthService
 from app.core.dependencies import get_db_connection, get_password_service
-from app.core.exceptions import UserNotFoundError
+from app.core.exceptions import WrongCredentialsError
 from app.core.security import PasswordService, oauth2_scheme
 from app.users.dependencies import get_user_service
 from app.users.schemas import SUserOut
@@ -52,7 +52,7 @@ async def get_current_user(
         user_payload['sub']
     )
     if not user:
-        raise UserNotFoundError
+        raise WrongCredentialsError
     return user
 
 

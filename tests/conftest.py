@@ -1,7 +1,10 @@
+from httpx import ASGITransport, AsyncClient
 from pytest import fixture
 from sqlalchemy.ext.asyncio import (
     create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine)
 
+from app.main import app
+from app.core.dependencies import get_db_connection
 from app.auth.connector import UserConnector
 from app.auth.repository import AuthRepo
 from app.auth.service import AuthService
@@ -10,6 +13,7 @@ from app.project.repository import ProjectRepo
 from app.project.schemas import SProjectCreate
 from app.project.service import ProjectService
 from app.settings import settings
+from app.users.models import User
 from app.users.repository import UserRepo
 from app.users.service import UserService
 from app.core.security import PasswordService, pwd_service
@@ -44,6 +48,23 @@ async def async_session(async_engine: AsyncEngine):
         yield session
 
 
+@fixture
+async def override_db(async_session: AsyncSession):
+    async def _get_db_session():
+        yield async_session
+    app.dependency_overrides[get_db_connection] = _get_db_session
+    yield
+    app.dependency_overrides.pop(get_db_connection, None)
+
+
+@fixture
+async def client(override_db: None):
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url='http://test'
+    ) as client:
+        yield client
+
+
 @fixture()
 async def user_repo(async_session: AsyncSession):
     yield UserRepo(async_session)
@@ -58,8 +79,20 @@ async def user_service(user_repo: UserRepo):
 async def create_user(user_repo: UserRepo):
     return await user_repo.create_user({
         'username': 'maksu',
-        'hashed_password': 'password'
+        'hashed_password': await PasswordService.get_pwd_hash('password'),
+        'is_staff': True
     })
+
+
+@fixture()
+async def get_auth(create_user: User, client: AsyncClient):
+    data = {
+        "grant_type": "password",
+        "username": 'maksu',
+        "password": 'password'
+    }
+    response = await client.post('/auth/login', data=data)
+    return {'Authorization': f'Bearer {response.json()['access_token']}'}
 
 
 @fixture

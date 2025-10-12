@@ -23,10 +23,12 @@ async def create_project(repo: ProjectRepo):
     })
 
 
+@pytest.mark.database
 async def test_project_empty(repo: ProjectRepo):
     assert await repo.get_all() == ([], 0)
 
 
+@pytest.mark.database
 async def test_project_create(repo: ProjectRepo):
     data = {
         'name': 'sample_project',
@@ -41,6 +43,7 @@ async def test_project_create(repo: ProjectRepo):
     assert not await repo.create(data) and (await repo.get_all())[1] == 1
 
 
+@pytest.mark.database
 async def test_project_edit(create_project: Project, repo: ProjectRepo):
     project = await repo.update({
         'name': 'changed_name',
@@ -50,6 +53,7 @@ async def test_project_edit(create_project: Project, repo: ProjectRepo):
             and project.description == 'changed_description')
 
 
+@pytest.mark.database
 async def test_project_delete(create_project: Project, repo: ProjectRepo):
     await repo.delete(create_project.id)
     assert not await repo.get_by_id(create_project.id)

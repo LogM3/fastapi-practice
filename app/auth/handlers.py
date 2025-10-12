@@ -12,7 +12,7 @@ from app.core.exceptions import UsernameExistsError, WrongCredentialsError
 router: APIRouter = APIRouter(prefix='/auth', tags=['Auth'])
 
 
-@router.post('/register')
+@router.post('/register', status_code=201)
 async def register(
     service: Annotated[AuthService, Depends(get_auth_service)],
     user_data: SAuthRegister
