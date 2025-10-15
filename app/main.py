@@ -16,6 +16,11 @@ app.include_router(project_router)
 app.include_router(test_router)
 
 
+@app.get('/')
+async def root():
+    return {'status': 'ok'}
+
+
 @app.middleware('http')
 async def decode_token(request: Request, call_next):
     auth: str | None = request.headers.get('Authorization')
