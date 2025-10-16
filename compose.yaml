@@ -20,17 +20,35 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+
+  redis:
+    image: redis:alpine3.22
+    container_name: redis
+    networks:
+      - appnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
   
   backend:
-    build:
-      context: .
+    build: .
     container_name: backend
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     environment:
       - DB_HOST=db
+      - REDIS_HOST=redis
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    volumes:
+      - ./app:/app/app
     networks:
       - appnetwork
     healthcheck:
@@ -39,6 +57,41 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  worker:
+    build: .
+    container_name: celery
+    command: celery -A app.tasks.celery:celery_app worker --beat --loglevel=info
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+    volumes:
+      - ./app:/app/app
+    networks:
+      - appnetwork    
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  flower:
+    build: .
+    container_name: flower
+    command: celery -A app.tasks.celery:celery_app flower --port=5555 --host=0.0.0.0
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+    networks:
+      - appnetwork
+
 
 volumes:
   pgdata:

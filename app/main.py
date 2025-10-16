@@ -1,10 +1,13 @@
 from typing import Annotated, Any
 from fastapi import Depends, FastAPI, HTTPException, Request
+from pydantic import EmailStr
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.tasks.celery import celery_app
 from app.core.dependencies import get_db_connection
 from app.core.exceptions import TokenExpiredError
+from app.tasks.tasks import send_email as task_email
 from app.users.handlers import router as user_router
 from app.auth.handlers import router as auth_router
 from app.project.handlers import router as project_router
@@ -34,6 +37,26 @@ async def check_db(
         return {'version': result}
     except ConnectionRefusedError:
         raise HTTPException(500, 'Database unavailable')
+
+
+@app.get('/status/{task_id}')
+async def get_task_status(task_id: str):
+    task = celery_app.AsyncResult(task_id)
+    return {
+        'task_id': task_id,
+        'status': task.status,
+        'result': task.result
+    }
+
+
+@app.post('/send-email')
+async def send_email(
+    mail_to: EmailStr,
+    message: str = 'Test message'
+) -> dict[str, str]:
+    task = task_email.delay(mail_to, message)
+    return {'Message': task.task_id}
+
 
 
 @app.middleware('http')

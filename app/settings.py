@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     DB_PORT: str = '5432'
     DB_NAME: str = 'postgres'
 
+    REDIS_HOST: str = 'localhost'
+    REDIS_PORT: str = '6379'
+
     TESTING: bool = False
     TESTING_DB_NAME: str = 'testing'
 
